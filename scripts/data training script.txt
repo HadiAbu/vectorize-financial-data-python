@@ -1,0 +1,41 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import preprocessing
+import pandas as pd
+import json
+import pickle
+
+# read the data csv file
+financial_corpus_df = pd.read_csv('training_data.csv')
+
+# print the names of the categories as an array
+financial_corpus_df['category'].unique()
+
+# add label column with number for each category
+label_encoder = preprocessing.LabelEncoder()
+label_encoder.fit(financial_corpus_df['category'])
+financial_corpus_df['label'] = label_encoder.transform(financial_corpus_df['category'])
+
+# cleaning the data of words like ('or', 'the', ..etc)
+# as well as punctionation which is mostly considered as noise
+vectorizer = TfidfVectorizer(stop_words='english', max_features=1000)
+
+# isolating x/y columns for training
+x = financial_corpus_df['body']
+y = financial_corpus_df['label']
+
+# transforming x column data
+vectorized_x = vectorizer.fit_transform(x)
+
+# choose ML model
+rf_clf = RandomForestClassifier()
+
+# train data
+rf_clf.fit(vectorized_x, y)
+
+# export data
+pickle.dump(rf_clf, open('financial_text_classifier.pkl', 'wb'))
+pickle.dump(vectorizer, open('financial_text_vectorizer.pkl', 'wb'))
+pickle.dump(label_encoder, open('financial_text_encoder.pkl', 'wb'))
+
+
